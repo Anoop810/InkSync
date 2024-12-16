@@ -3,7 +3,7 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { io } from "socket.io-client";
 import { useParams } from "react-router-dom";
-
+const SAVE_INTERVAL_MS=2000
 const TOOLBAR_OPTIONS = [
   [{ color: [] }],
   [{ font: [] }],
@@ -30,7 +30,17 @@ export default function TextEditor() {
       quill.enable()
     })
     socket.emit('get-document',documentId)
-  },[socket,Quill,documentId])
+  },[socket,quill,documentId])
+
+  useEffect(()=>{
+    if(socket==null||quill==null)return
+    const interval=setInterval(()=>{
+      socket.emit('save-document',quill.getContents())
+    },SAVE_INTERVAL_MS)
+    return()=>{
+      clearInterval(interval)
+    }
+  },[socket,quill])
   useEffect(() => {
     const s = io("http://localhost:3001");
     setSocket(s);
